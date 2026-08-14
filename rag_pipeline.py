@@ -25,13 +25,11 @@ class RAGPipeline:
 
         context_str = "\n\n---\n\n".join(context_parts)
         prompt = SYSTEM_PROMPT.format(context=context_str, question=question)
-
-        # Call LLM if API key exists, otherwise provide a synthesized response based on top context
         answer = self._call_llm(prompt, context_parts)
         return answer, sources
 
     def _call_llm(self, prompt, context_parts):
-        # If OpenAI API key is available, use OpenAI API
+        
         openai_key = os.getenv("OPENAI_API_KEY")
         if openai_key:
             try:
@@ -48,9 +46,6 @@ class RAGPipeline:
                 return response.choices[0].message.content.strip()
             except Exception as e:
                 print(f"OpenAI API error: {e}")
-
-        # Fallback heuristic generator if no API key is set
-        # Extracts key sentences from context matching question keywords
         return f"Based on the uploaded documents:\n\n" + "\n\n".join([cp.split('\nSource:')[0].replace('Content: ', '') for cp in context_parts[:2]]) + \
                f"\n\n*(Note: Running in offline heuristic mode. Set OPENAI_API_KEY for full LLM generation).* \n\n**Sources:** " + \
                ", ".join([f"{cp.split('Source: ')[1]}" for cp in context_parts[:2]])
