@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+.env
+vector_store/saved_index/
+.streamlit/secrets.toml
+.DS_Store
+*.egg-info/
+venv/
+.venv/
