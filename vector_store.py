@@ -1,10 +1,9 @@
 import os
 import pickle
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_community.vectorstores import FAISS
-from langchain.docstore.document import Document
-
+from langchain_core.documents import Document
 class VectorStoreManager:
     def __init__(self, model_name="all-MiniLM-L6-v2"):
         self.embeddings = HuggingFaceEmbeddings(model_name=model_name)
