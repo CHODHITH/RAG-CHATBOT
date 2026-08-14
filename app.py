@@ -1,13 +1,9 @@
 import os
 import streamlit as st
 from document_loader import load_pdf_documents
-from rag_ppipipeline import RAGPipeline
+from rag_pipeline import RAGPipeline
 
-st.set_page_config(
-    page_title="Domain-Specific RAG Chatbot",
-    page_icon="📚",
-    layout="wide"
-)
+st.set_page_config(page_title='Domain-Specific RAG Chatbot', page_icon='📚', layout='wide')
 
 @st.cache_resource
 def get_rag_pipeline():
@@ -15,103 +11,85 @@ def get_rag_pipeline():
 
 rag = get_rag_pipeline()
 
-st.title("📚 Domain-Specific RAG Chatbot for PDF Question Answering")
-st.markdown("""
-Upload corporate policy documents, research notes, or manuals, and ask questions in natural language. 
-The system retrieves relevant passages and generates grounded answers with source citations.
-""")
+st.title('📚 Domain-Specific RAG Chatbot')
+st.write('Upload PDF documents and ask questions based on their content.')
 
-# Sidebar for Document Management
-st.sidebar.header("📁 Document Management")
+if 'processed' not in st.session_state:
+    st.session_state.processed = False
+
+if 'messages' not in st.session_state:
+    st.session_state.messages = []
+
+docs_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'documents')
+os.makedirs(docs_dir, exist_ok=True)
+
+st.sidebar.header('Document Upload')
+
 uploaded_files = st.sidebar.file_uploader(
-    "Upload PDF Documents", 
-    type=["pdf"], 
+    'Upload PDF files',
+    type='pdf',
     accept_multiple_files=True
 )
 
-if "processed" not in st.session_state:
-    st.session_state.processed = False
+if st.sidebar.button('Process Documents'):
+    pdf_paths = []
 
-docs_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "documents")
-os.makedirs(docs_dir, exist_ok=True)
-
-if st.sidebar.button("Process Documents"):
     if uploaded_files:
-        pdf_paths = []
-        for uploaded_file in uploaded_files:
-            file_path = os.path.join(docs_dir, uploaded_file.name)
-            with open(file_path, "wb") as f:
-                f.write(uploaded_file.getbuffer())
-            pdf_paths.append(file_path)
-        
-        with st.spinner("Extracting text, chunking, and building vector embeddings..."):
-            extracted = load_pdf_documents(pdf_paths)
-            if extracted:
-                rag.initialize_pipeline(extracted)
-                st.session_state.processed = True
-                st.sidebar.success(f"Successfully processed {len(extracted)} pages!")
-            else:
-                st.sidebar.error("No extractable text found in the uploaded PDFs.")
+        for file in uploaded_files:
+            path = os.path.join(docs_dir, file.name)
+            with open(path, 'wb') as f:
+                f.write(file.getbuffer())
+            pdf_paths.append(path)
     else:
-        # Check if default sample policy exists
-        sample_pdf = os.path.join(docs_dir, "sample_policy.pdf")
+        sample_pdf = os.path.join(docs_dir, 'sample.pdf')
         if os.path.exists(sample_pdf):
-            with st.spinner("Processing default sample policy document..."):
-                extracted = load_pdf_documents([sample_pdf])
-                rag.initialize_pipeline(extracted)
-                st.session_state.processed = True
-                st.sidebar.success("Successfully processed default sample policy!")
-        else:
-            st.sidebar.warning("Please upload at least one PDF file.")
+            pdf_paths.append(sample_pdf)
 
-# Default sample loader button
-if not st.session_state.processed:
-    sample_pdf = os.path.join(docs_dir, "sample_policy.pdf")
-    if os.path.exists(sample_pdf):
-        if st.sidebar.button("Load Default Sample Policy"):
-            extracted = load_pdf_documents([sample_pdf])
-            rag.initialize_pipeline(extracted)
+    if pdf_paths:
+        with st.spinner('Processing documents...'):
+            documents = load_pdf_documents(pdf_paths)
+            rag.initialize_pipeline(documents)
             st.session_state.processed = True
-            st.sidebar.success("Loaded default sample policy (sample_policy.pdf).")
+            st.sidebar.success('Documents processed successfully')
+    else:
+        st.sidebar.warning('Please upload a PDF file')
 
-# Clear chat history
-if st.sidebar.button("Clear Chat History"):
+if st.sidebar.button('Clear Chat'):
     st.session_state.messages = []
     st.rerun()
 
-# Main Chat Interface
-if "messages" not in st.session_state:
-    st.session_state.messages = []
-
 for message in st.session_state.messages:
-    with st.chat_message(message["role"]):
-        st.markdown(message["content"])
-        if "sources" in message and message["sources"]:
-            with st.expander("View Source Citations"):
-                for src in message["sources"]:
-                    st.markdown(f"- **Document:** `{src['source']}` | **Page:** `{src['page']}`")
-
-prompt = st.chat_input("Ask a question about your documents...")
+    with st.chat_message(message['role']):
+        st.markdown(message['content'])
+        if message.get('sources'):
+            with st.expander('Sources'):
+                for src in message['sources']:
+                    st.write(f"{src['source']} - Page {src['page']}")
+prompt = st.chat_input('Ask a question')
 
 if prompt:
     if not st.session_state.processed:
-        st.warning("Please process documents first using the sidebar button or load the default sample policy.")
+        st.warning('Please process documents first')
     else:
-        st.session_state.messages.append({"role": "user", "content": prompt})
-        with st.chat_message("user"):
+        st.session_state.messages.append({
+            'role': 'user',
+            'content': prompt
+        })
+
+        with st.chat_message('user'):
             st.markdown(prompt)
 
-        with st.chat_message("assistant"):
-            with st.spinner("Searching documents and generating grounded answer..."):
+        with st.chat_message('assistant'):
+            with st.spinner('Generating answer...'):
                 answer, sources = rag.answer_question(prompt)
                 st.markdown(answer)
+
                 if sources:
-                    with st.expander("View Source Citations"):
+                    with st.expander('Sources'):
                         for src in sources:
-                            st.markdown(f"- **Document:** `{src['source']}` | **Page:** `{src['page']}` (Relevance Score: {src.get('score', 0):.4f})")
-                
+                            st.write(f"{src['source']} - Page {src['page']}")
                 st.session_state.messages.append({
-                    "role": "assistant", 
-                    "content": answer,
-                    "sources": sources
+                    'role': 'assistant',
+                    'content': answer,
+                    'sources': sources
                 })
