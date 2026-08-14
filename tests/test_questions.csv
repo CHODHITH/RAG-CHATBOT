@@ -1,0 +1,16 @@
+id,question,expected_source,expected_page,retrieved_source,retrieved_page,status
+1,What is the annual leave allowance for employees?,sample_policy.pdf,1,sample_policy.pdf,1,Correct
+2,How many days of paid sick leave are provided?,sample_policy.pdf,1,sample_policy.pdf,1,Correct
+3,What is the maternity leave duration?,sample_policy.pdf,1,sample_policy.pdf,1,Correct
+4,How is employee attendance calculated?,sample_policy.pdf,1,sample_policy.pdf,1,Correct
+5,What are the password complexity requirements?,sample_policy.pdf,2,sample_policy.pdf,2,Correct
+6,What is the policy on remote work and VPN?,sample_policy.pdf,2,sample_policy.pdf,2,Correct
+7,What security measures are required for BYOD devices?,sample_policy.pdf,2,sample_policy.pdf,2,Correct
+8,Where should security incidents be reported?,sample_policy.pdf,2,sample_policy.pdf,2,Correct
+9,When are salaries disbursed each month?,sample_policy.pdf,3,sample_policy.pdf,3,Correct
+10,What health insurance coverage is provided?,sample_policy.pdf,3,sample_policy.pdf,3,Correct
+11,When are formal performance reviews conducted?,sample_policy.pdf,3,sample_policy.pdf,3,Correct
+12,What is the company policy on harassment?,sample_policy.pdf,3,sample_policy.pdf,3,Correct
+13,How can employees report ethical violations anonymously?,sample_policy.pdf,3,sample_policy.pdf,3,Correct
+14,Who is the current Chief Executive Officer of the company?,Not available,None,None,None,Refused Correctly
+15,What is the company stock ticker symbol?,Not available,None,None,None,Refused Correctly
